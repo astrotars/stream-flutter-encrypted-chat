@@ -12,16 +12,22 @@ class ApiService {
     var authResponse =
         await http.post('$_baseUrl/v1/authenticate', body: {'user': user});
     var authToken = json.decode(authResponse.body)['authToken'];
+
     var streamResponse = await http.post('$_baseUrl/v1/stream-credentials',
         headers: {'Authorization': 'Bearer $authToken'});
     var streamBody = json.decode(streamResponse.body);
     var streamToken = streamBody['token'];
     var streamApiKey = streamBody['apiKey'];
 
+    var virgilResponse = await http
+        .post('$_baseUrl/v1/virgil-credentials', headers: {'Authorization': 'Bearer $authToken'});
+    var virgilToken = json.decode(virgilResponse.body)['token'];
+
     return {
       'authToken': authToken,
       'streamToken': streamToken,
       'streamApiKey': streamApiKey,
+      'virgilToken': virgilToken,
     };
   }
 

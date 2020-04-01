@@ -1,3 +1,4 @@
+import 'package:encryptedchat/virgil_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 
@@ -36,10 +37,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Future _login(BuildContext context) async {
     if (_userController.text.length > 0) {
       var user = _userController.text;
+
       var credentials = await ApiService().login(user);
 
       final client = Client(credentials['streamApiKey'], logLevel: Level.INFO);
       await client.setUser(User(id: user), credentials['streamToken']);
+
+      await VirgilService().initVirgil(user, credentials['virgilToken']);
 
       setState(() {
         _account = Account(
