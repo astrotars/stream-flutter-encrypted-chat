@@ -1,7 +1,7 @@
 import 'package:encryptedchat/account.dart';
 import 'package:flutter/material.dart';
 
-import 'api_service.dart';
+import 'services/backend_service.dart';
 import 'chat.dart';
 
 class Users extends StatefulWidget {
@@ -19,7 +19,7 @@ class _UsersState extends State<Users> {
   @override
   void initState() {
     super.initState();
-    _users = ApiService().users(widget.account);
+    _users = backend.users();
   }
 
   @override
@@ -43,7 +43,7 @@ class _UsersState extends State<Users> {
                       MaterialPageRoute(
                         builder: (_) => Chat(
                           account: widget.account,
-                          user: user,
+                          otherUser: user,
                         ),
                       ),
                     );

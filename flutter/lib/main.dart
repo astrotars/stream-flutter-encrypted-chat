@@ -1,9 +1,9 @@
-import 'package:encryptedchat/virgil_service.dart';
+import 'package:encryptedchat/services/virgil_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 
 import 'account.dart';
-import 'api_service.dart';
+import 'services/backend_service.dart';
 import 'users.dart';
 
 void main() => runApp(MyApp());
@@ -38,12 +38,12 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_userController.text.length > 0) {
       var user = _userController.text;
 
-      var credentials = await ApiService().login(user);
+      var credentials = await backend.login(user);
 
       final client = Client(credentials['streamApiKey'], logLevel: Level.INFO);
       await client.setUser(User(id: user), credentials['streamToken']);
 
-      await VirgilService().initVirgil(user, credentials['virgilToken']);
+      await virgil.init(user, credentials['virgilToken']);
 
       setState(() {
         _account = Account(

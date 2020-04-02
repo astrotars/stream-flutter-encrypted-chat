@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 
 import 'account.dart';
+import 'encrypted_message.dart';
+import 'services/virgil_service.dart';
 
 class Chat extends StatefulWidget {
-  Chat({Key key, @required this.account, @required this.user})
+  Chat({Key key, @required this.account, @required this.otherUser})
       : super(key: key);
 
   final Account account;
-  final String user;
+  final String otherUser;
 
   @override
   _ChatState createState() => _ChatState();
@@ -22,7 +24,7 @@ class _ChatState extends State<Chat> {
   void initState() {
     super.initState();
 
-    var users = [widget.account.user, widget.user];
+    var users = [widget.account.user, widget.otherUser];
     users.sort();
     var channelId = users.join("-");
     _channel = widget.account.streamClient.channel(
@@ -34,9 +36,10 @@ class _ChatState extends State<Chat> {
     _channel.watch();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_messageController.text.length > 0) {
-      _channel.sendMessage(Message(text: _messageController.text));
+      var encryptedText = await virgil.encrypt(widget.otherUser, _messageController.text);
+      _channel.sendMessage(Message(text: encryptedText));
       _messageController.clear();
     }
   }
@@ -85,35 +88,8 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  Widget _messageBuilder(context, message, index) {
-    final isCurrentUser = StreamChat
-        .of(context)
-        .user
-        .id == message.user.id;
-    final textAlign = isCurrentUser ? TextAlign.right : TextAlign.left;
-    final color = isCurrentUser ? Colors.blueGrey : Colors.blue;
-
-    return Padding(
-      padding: EdgeInsets.all(5.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: color, width: 1),
-          borderRadius: BorderRadius.all(
-            Radius.circular(5.0),
-          ),
-        ),
-        child: ListTile(
-          title: Text(
-            message.text,
-            textAlign: textAlign,
-          ),
-          subtitle: Text(
-            message.user.id,
-            textAlign: textAlign,
-          ),
-        ),
-      ),
-    );
+  Widget _messageBuilder(context, message, _) {
+    return EncryptedMessage(message: message);
   }
 
   @override

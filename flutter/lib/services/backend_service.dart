@@ -2,26 +2,33 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'account.dart';
+final BackendService backend = BackendService._singleton();
 
-class ApiService {
+class BackendService {
+  BackendService._singleton();
+
+  String authToken;
+  String streamToken;
+  String streamApiKey;
+  String virgilToken;
+
   // android only, for both platforms use something like: https://ngrok.com/
   static const _baseUrl = 'http://10.0.2.2:8080';
 
-  Future<Map> login(String user) async {
+  Future<Map<String, String>> login(String user) async {
     var authResponse =
         await http.post('$_baseUrl/v1/authenticate', body: {'user': user});
-    var authToken = json.decode(authResponse.body)['authToken'];
+    authToken = json.decode(authResponse.body)['authToken'];
 
     var streamResponse = await http.post('$_baseUrl/v1/stream-credentials',
         headers: {'Authorization': 'Bearer $authToken'});
     var streamBody = json.decode(streamResponse.body);
-    var streamToken = streamBody['token'];
-    var streamApiKey = streamBody['apiKey'];
+    streamToken = streamBody['token'];
+    streamApiKey = streamBody['apiKey'];
 
     var virgilResponse = await http
         .post('$_baseUrl/v1/virgil-credentials', headers: {'Authorization': 'Bearer $authToken'});
-    var virgilToken = json.decode(virgilResponse.body)['token'];
+    virgilToken = json.decode(virgilResponse.body)['token'];
 
     return {
       'authToken': authToken,
@@ -31,9 +38,9 @@ class ApiService {
     };
   }
 
-  Future<List> users(Account account) async {
+  Future<List> users() async {
     var response = await http.get('$_baseUrl/v1/users',
-        headers: {'Authorization': 'Bearer ${account.authToken}'});
+        headers: {'Authorization': 'Bearer $authToken'});
     return json.decode(response.body);
   }
 }
