@@ -13,7 +13,7 @@ class BackendService {
   String virgilToken;
 
   // android only, for both platforms use something like: https://ngrok.com/
-  static const _baseUrl = 'http://10.0.2.2:8080';
+  static const _baseUrl = 'https://6cb76c8d.ngrok.io';
 
   Future<Map<String, String>> login(String user) async {
     var authResponse =
