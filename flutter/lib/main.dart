@@ -6,9 +6,9 @@ import 'account.dart';
 import 'services/backend_service.dart';
 import 'users.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(App());
 
-class MyApp extends StatelessWidget {
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,21 +16,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: StreamEncryptedChatDemo(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
+class StreamEncryptedChatDemo extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _StreamEncryptedChatDemoState createState() => _StreamEncryptedChatDemoState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _StreamEncryptedChatDemoState extends State<StreamEncryptedChatDemo> {
   final _userController = TextEditingController();
   Account _account;
 

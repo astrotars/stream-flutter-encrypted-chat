@@ -88,7 +88,7 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  Widget _messageBuilder(context, message, _) {
+  Widget _messageBuilder(_context, message, _index) {
     return EncryptedMessage(message: message);
   }
 
