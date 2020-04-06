@@ -1,6 +1,6 @@
 # Stream Flutter Encrypted Chat
 
-In this tutorial we'll build encrypted chat on iOS using Flutter. We'll combine Stream Chat and Virgil Security. Both Stream Chat and Virgil make it easy to build a solution with great security with all the features you expect. These two services allow developers to integrate chat that is zero knowledge. The application embeds Virgil Security's eThree Kit (on iOS and Android) with Stream Chat's Flutter components. All source code for this application is available on [GitHub](https://github.com/psylinse/stream-flutter-encrypted-chat).
+In this tutorial, we'll build encrypted chat on iOS using Flutter. We'll combine Stream Chat and Virgil Security. Both Stream Chat and Virgil make it easy to build a solution with great security with all the features you expect. These two services allow developers to integrate chat that is zero-knowledge. The application embeds Virgil Security's eThree Kit (on iOS and Android) with Stream Chat's Flutter components. All source code for this application is available on [GitHub](https://github.com/psylinse/stream-flutter-encrypted-chat).
 
 ## What is end-to-end encryption?
 
@@ -12,29 +12,24 @@ During this tutorial, we will create a Stream Chat app that uses Virgil's encryp
 
 ## Building an Encrypted Chat Application
 
-To build this application we'll mostly rely on three libraries, Stream Chat Flutter, Virgil's E3Kit Swift, and Virgil's E3Kit Android. Our final product will encrypt text on device before sending a message. Decryption and verification will both happen in the receiver's device. Stream's Chat API will only see cyphertext, ensuring our user's data is never seen by anyone else, including you.
+To build this application we'll mostly rely on three libraries, Stream Chat Flutter, Virgil's E3Kit Swift, and Virgil's E3Kit Android. Our final product will encrypt text on the device before sending a message. Decryption and verification will both happen in the receiver's device. Stream's Chat API will only see cyphertext, ensuring our user's data is never seen by anyone else, including you.
 
 To accomplish this, the app performs the following process:
 
 * A user authenticates with your backend.
-* The user's app requests a Stream auth token and api key from the `backend`. The
+* The user's app requests a Stream auth token and API key from the `backend`. The
    Flutter app creates a
-   [Stream Chat Client](https://getstream.io/chat/docs/#init_and_users) for that
-   user.
+   [Stream Chat Client](https://getstream.io/chat/docs/#init_and_users) for that user.
 * The user's app requests a Virgil auth token from the `backend` and registers
-   with Virgil. This generates their private and public key. The private key is
-   stored locally, and the public key is stored in Virgil.
+   with Virgil. This generates their private and public key. The private key is stored locally, and the public key is stored in Virgil.
 * Once the user decides who they want to chat with the app creates and
    joins a
    [Stream Chat Channel](https://getstream.io/chat/docs/#initialize_channel).
-* The app asks Virgil for receiver's public key.
+* The app asks Virgil for the receiver's public key.
 * The user types a message and sends it to stream. Before sending, the app
-   passes the receiver's public key to Virgil to encrypt the message. The
-   message is relayed through Stream Chat to the receiver. Stream receives
-   ciphertext, meaning they can never see the original message.
+   passes the receiver's public key to Virgil to encrypt the message. The message is relayed through Stream Chat to the receiver. Stream receives ciphertext, meaning they can never see the original message.
 * The receiving user decrypts the sent message using Virgil. When the message
-   is received, app decrypts the message using the Virgil and this is
-   passed along to Stream's React components. Virgil verifies the message is
+   is received, app decrypts the message using the Virgil and this is passed along to Stream's React components. Virgil verifies the message is
    authentic by using the sender's public key.
 
 While this looks complicated, Stream and Virgil do most of the work for us. We'll use Stream's out of the box UI components to render the chat UI and Virgil to do all of the cryptography and key management. We simply combine these services. 
@@ -57,14 +52,12 @@ your accounts, you can place your credentials in `backend/.env` if you'd like to
 
 ## Step 0. Setup the Backend
 
-For our Flutter app to interact with Stream and Virgil, the
-application provides three endpoints:
+For our Flutter app to securely interact with Stream and Virgil, the
+the `backend` provides three endpoints:
 
 * `POST /v1/authenticate`: This endpoint generates an auth token that allows the
   React frontend to communicate with `/v1/stream-credentials` and
-  `/v1/virgil-credentials`. To keep things simple, this endpoint allows
-  the client to be any user. The frontend tells the backend who it wants
-  to authenticate as. In your application, this should be replaced with your
+  `/v1/virgil-credentials`. To keep things simple, this endpoint allows the client to be any user. The frontend tells the backend who it wants to authenticate as. In your application, this should be replaced with your
   API's authentication endpoint.
 
 * `POST /v1/stream-credentials`: This returns the data required for the React
@@ -148,7 +141,7 @@ application provides three endpoints:
 
 ## Step 1. User Authenticates With Backend
 
-First step is to authenticate a user and get our Stream and Virgil credentials. To keep thing simple, we'll have a simple form that allows you to log in as anyone:
+The first step is to authenticate a user and get our Stream and Virgil credentials. To keep thing simple, we'll have a simple form that allows you to log in as anyone:
 
 ![](images/login.png)
 
@@ -229,7 +222,7 @@ Future _login(BuildContext context) async {
 }
 ```
 
-We log in with the backend, via `backend.login` and use those credentials to initialize our Stream `Client` with the user and initialize virgil. We store the results in our `_account` instance variable which allows us to boot the `Users` screen. Before we look at our list of users to chat with, let's check out `backend.login` and `virgil.init`. 
+We log in with the backend, via `backend.login` and use those credentials to initialize our Stream `Client` with the user and initialize Virgil. We store the results in our `_account` instance variable which allows us to boot the `Users` screen. Before we look at our list of users to chat with, let's check out `backend.login` and `virgil.init`. 
 
 First let's look at `backend_service.dart`:
 
@@ -275,7 +268,7 @@ class BackendService {
 }
 ```
 
-The `backend` variable is a singleton service that knows how to coordinate with the backend api. The login method performs three steps to get all necessary credentials. First it authenticates against the api to get an auth token. Using the auth token, it asks for a Stream frontend token and Virgil frontend token. These frontend tokens allow our Flutter application to communicate directly with Stream and Virgil without going through our backend.
+The `backend` variable is a singleton service that knows how to coordinate with the backend API. The login method performs three steps to get all the necessary credentials. First, it authenticates against the API to get an auth token. Using the auth token, it asks for a Stream frontend token and Virgil frontend token. These frontend tokens allow our Flutter application to communicate directly with Stream and Virgil without going through our backend.
 
 Last let's look at how we initialize Virgil via `virgil.init`:
 
@@ -337,7 +330,7 @@ class MainActivity : FlutterActivity(), CoroutineScope by MainScope() {
 }
 ```
 
-Virgil's client is called `EThree`. We initialize an `EThree` instance and register. This call generates a private key and stores it on the device and sends our public key to virgil. If we get a `RegistrationException` we have already registered this user. Keep in mind, you cannot log into the same user on a different device, since we're not sharing the private key with the other device! This is possible, but out of scope for this tutorial. If you'd like to accomplish this, see Virgil's [documentation](https://developer.virgilsecurity.com/docs/e3kit/multi-device-support/). Note, the Virgil token will expire, so in a production application you need to provide a more robust `OnGetTokenCallback`. If the token expires, simply restart the app and log in.
+Virgil's client is called `EThree`. We initialize an `EThree` instance and register. This call generates a private key and stores it on the device and sends our public key to Virgil. If we get a `RegistrationException` we have already registered this user. Keep in mind, you cannot log into the same user on a different device since we're not sharing the private key with the other device! This is possible, but out of scope for this tutorial. If you'd like to accomplish this, see Virgil's [documentation](https://developer.virgilsecurity.com/docs/e3kit/multi-device-support/). Note, the Virgil token will expire, so in a production application you need to provide a more robust `OnGetTokenCallback`. If the token expires, simply restart the app and log in.
 
 Here is the Swift impelmentation, which does the same thing on iOS:
 
@@ -484,7 +477,7 @@ This is a simple request to the `backend` to get our list of users. When a user 
 
 ## Step 3: Create a Private 1-on-1 Chat Channel
 
-First we need to create our channel for our private chat. Let's look at how the `Chat` widget is laid out:
+First, we need to create our channel for our private chat. Let's look at how the `Chat` widget is laid out:
 
 ```dart
 // flutter/lib/chat.dart:7
@@ -676,7 +669,7 @@ class MainActivity : FlutterActivity(), CoroutineScope by MainScope() {
 }
 ```
 
-Using Virgil's `EThree` we look up the user we're chatting with's public key and use it to encryp the text. We pass the result back to Flutter. 
+Using Virgil's `EThree` we look up the other user's public key and use it to encrypt the text. We pass the result back to Flutter. 
 
 The same thing happens in Swift:
 
@@ -850,7 +843,7 @@ private fun decryptTheirs(text: String, otherUser: String, result: MethodChannel
 }
 ```
 
-If the message is ours, then we can simply decrypt since we have everything we need to do so on device. If the message is theirs, we need to look up their public key first, then use that key to verify the decrypted message is authentic. 
+If the message is ours, then we can simply decrypt since we have everything we need to do so on the device. If the message is theirs, we need to look up their public key first, then use that key to verify the decrypted message is authentic. 
 
 Here's the Swift side:
 
@@ -877,4 +870,3 @@ Typing a view messages on both sides will give a view like this:
 
 
 And we're done! We have full end-to-end encryption using Stream and Virgil in Flutter.
-
