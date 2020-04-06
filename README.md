@@ -1,18 +1,18 @@
 # Stream Flutter Encrypted Chat
 
-In this tutorial, we'll build encrypted chat on iOS using Flutter. We'll combine Stream Chat and Virgil Security. Both Stream Chat and Virgil make it easy to build a solution with great security with all the features you expect. These two services allow developers to integrate chat that is zero-knowledge. The application embeds Virgil Security's eThree Kit (on iOS and Android) with Stream Chat's Flutter components. All source code for this application is available on [GitHub](https://github.com/psylinse/stream-flutter-encrypted-chat).
+In this tutorial, we'll build encrypted chat on iOS and Android using Flutter. We'll combine Stream Chat and Virgil Security. Both Stream Chat and Virgil make it easy to build a solution with great security with all the features you expect. These two services allow developers to integrate chat that is zero-knowledge. The application embeds Virgil Security's eThree Kit (on [iOS](https://github.com/VirgilSecurity/virgil-sdk-x) and [Android](https://github.com/VirgilSecurity/virgil-sdk-java-android)) with [Stream Chat's Flutter](https://github.com/GetStream/stream-chat-flutter) components. All source code for this application is available on [GitHub](https://github.com/psylinse/stream-flutter-encrypted-chat).
 
 ## What is end-to-end encryption?
 
 End-to-end encryption means that messages sent between two people can only be read by them. To do this, the message is encrypted before it leaves a user's device, and can only be decrypted by the intended recipient.
 
-Virgil Security is a vendor that allows us to create end-to-end encryption via public/private key technology. Virgil provides a platform and JavaScript SDK that allows us to securely create, store, and provide robust end-to-end encryption.
+Virgil Security is a vendor that allows us to create end-to-end encryption via public/private key technology. Virgil provides a platform and a platform that allows us to securely create, store, and provide robust end-to-end encryption.
 
 During this tutorial, we will create a Stream Chat app that uses Virgil's encryption to prevent anyone except the intended parties from reading messages. No one in your company, nor any cloud provider you use, can read these messages. Even if a malicious person gained access to the database containing the messages, all they would see is encrypted text, called ciphertext.
 
 ## Building an Encrypted Chat Application
 
-To build this application we'll mostly rely on three libraries, Stream Chat Flutter, Virgil's E3Kit Swift, and Virgil's E3Kit Android. Our final product will encrypt text on the device before sending a message. Decryption and verification will both happen in the receiver's device. Stream's Chat API will only see cyphertext, ensuring our user's data is never seen by anyone else, including you.
+To build this application we'll mostly rely on a few libraries from Stream Chat and Virgil (please check out the dependencies in the source to see what versions). Our final product will encrypt text on the device before sending a message. Decryption and verification will both happen in the receiver's device. Stream's Chat API will only see cyphertext, ensuring our user's data is never seen by anyone else, including you.
 
 To accomplish this, the app performs the following process:
 
@@ -29,16 +29,11 @@ To accomplish this, the app performs the following process:
 * The user types a message and sends it to stream. Before sending, the app
    passes the receiver's public key to Virgil to encrypt the message. The message is relayed through Stream Chat to the receiver. Stream receives ciphertext, meaning they can never see the original message.
 * The receiving user decrypts the sent message using Virgil. When the message
-   is received, app decrypts the message using the Virgil and this is passed along to Stream's React components. Virgil verifies the message is
-   authentic by using the sender's public key.
+   is received, app decrypts the message using the Virgil and this is passed along to Stream's React components. Virgil verifies the message is authentic by using the sender's public key.
 
 While this looks complicated, Stream and Virgil do most of the work for us. We'll use Stream's out of the box UI components to render the chat UI and Virgil to do all of the cryptography and key management. We simply combine these services. 
 
-The code is split between the Android frontend contained in the `flutter` folder
-and the Express (Node.js) backend is found in the `backend` folder. See the
-`README.md` in each folder to see installing and running instructions. If you'd
-like to follow along with running code, make sure you get both the `backend` and
-`flutter` running before continuing.
+The code is split between the Flutter frontend contained in the `flutter` folder and the Express (Node.js) backend is found in the `backend` folder. See the `README.md` in each folder to see installing and running instructions. If you'd like to follow along with running code, make sure you get both the `backend` and `flutter` running before continuing.
 
 Let's walk through and look at the important code needed for each step.
 
@@ -46,9 +41,7 @@ Let's walk through and look at the important code needed for each step.
 
 Basic knowledge of Flutter, Android (Kotlin), iOS (Swift), and Node.js is required to follow this tutorial. This code is intended to run locally on your machine. 
 
-You will need an account with [Stream](https://getstream.io/accounts/signup/) 
-and [Virgil](https://dashboard.virgilsecurity.com/signup). Once you've created
-your accounts, you can place your credentials in `backend/.env` if you'd like to run the code. You can use `backend/.env.example` as a reference for what credentials are required. You also need to set up ngrok in `backend_service.dart` or something similar if you'd like to run it on iOS.
+You will need an account with [Stream](https://getstream.io/accounts/signup/) and [Virgil](https://dashboard.virgilsecurity.com/signup). Once you've created your accounts, you can place your credentials in `backend/.env` if you'd like to run the code. You can use `backend/.env.example` as a reference for what credentials are required. You also need to set up ngrok in `backend_service.dart` or something similar if you'd like to run it on iOS.
 
 ## Step 0. Setup the Backend
 
@@ -56,13 +49,9 @@ For our Flutter app to securely interact with Stream and Virgil, the
 the `backend` provides three endpoints:
 
 * `POST /v1/authenticate`: This endpoint generates an auth token that allows the
-  React frontend to communicate with `/v1/stream-credentials` and
-  `/v1/virgil-credentials`. To keep things simple, this endpoint allows the client to be any user. The frontend tells the backend who it wants to authenticate as. In your application, this should be replaced with your
-  API's authentication endpoint.
+  React frontend to communicate with the other endpoints. To keep things simple, this endpoint allows the client to be any user. The frontend tells the backend who it wants to authenticate as. In your application, this should be replaced with real authentication appropriate for your app.
 
-* `POST /v1/stream-credentials`: This returns the data required for the React
-  app to establish a session with Stream. In order return this info we need to
-  tell Stream this user exists and ask them to create a valid auth token:
+* `POST /v1/stream-credentials`: This returns the data required for the Flutter app to establish a session with Stream. In order return this info we need to tell Stream this user exists and ask them to create a valid auth token:
   
   ```javascript
   // backend/src/controllers/v1/stream-credentials.js
@@ -98,15 +87,11 @@ the `backend` provides three endpoints:
   } 
   ```
   
-   * `apiKey` is the stream account identifier for your Stream instance. Needed
-     to identify what account your frontend is trying to connect with.
+   * `apiKey` is the stream account identifier for your Stream instance. Needed to identify what account your frontend is trying to connect with.
    * `token` JWT token to authorize the frontend with Stream.
-   * `user`: This object contains the data that the frontend needs to connect and
-     render the user's view.
+   * `user`: This object contains the data that the frontend needs to connect and render the user's view.
 
-* `POST /v1/virgil-credentials`: This returns the authentication token used to
-  connect the frontend to Virgil. We use the Virgil Crypto SDK to generate a
-  valid auth token for us:
+* `POST /v1/virgil-credentials`: This returns the authentication token used to connect the frontend to Virgil. We use the Virgil Crypto SDK to generate a valid auth token for us:
   
   ```javascript
   // backend/src/controllers/v1/virgil-credentials.js
@@ -145,7 +130,7 @@ The first step is to authenticate a user and get our Stream and Virgil credentia
 
 ![](images/login.png)
 
-This simple form takes an arbitary user name and logs that user in (the backend will create them if necessary). We set this up in `main.dart`:
+This simple form takes an arbitary user name and logs that user in (the backend will create the user and register them with Stream/Virgil if necessary). We set this up in `main.dart`:
 
 ```dart
 // flutter/lib/main.dart:29
@@ -222,7 +207,7 @@ Future _login(BuildContext context) async {
 }
 ```
 
-We log in with the backend, via `backend.login` and use those credentials to initialize our Stream `Client` with the user and initialize Virgil. We store the results in our `_account` instance variable which allows us to boot the `Users` screen. Before we look at our list of users to chat with, let's check out `backend.login` and `virgil.init`. 
+We log in with the backend, via `backend.login`. We use those credentials to initialize our Stream `Client` with the user and initialize Virgil. We store the results in our `_account` instance variable which allows us to boot the `Users` screen. Before we look at our list of users to chat with, let's check out `backend.login` and `virgil.init`. 
 
 First let's look at `backend_service.dart`:
 
@@ -289,7 +274,7 @@ class VirgilService {
 }
 ```
 
-Since Virgil doesn't supply a Flutter client, we need to use native code for both iOS and Android. We use Flutter's [platform channels](https://flutter.dev/docs/development/platform-integration/platform-channels) to call to our native code. First let's look at our Android implementation:
+Since Virgil doesn't supply a Flutter SDK, we need to use native code for both iOS and Android. We use Flutter's [platform channels](https://flutter.dev/docs/development/platform-integration/platform-channels) to call to native code. First, let's look at our Android implementation:
 
 ```kotlin
 // flutter/android/app/src/main/kotlin/io/getstream/encryptedchat/MainActivity.kt:16
@@ -330,9 +315,9 @@ class MainActivity : FlutterActivity(), CoroutineScope by MainScope() {
 }
 ```
 
-Virgil's client is called `EThree`. We initialize an `EThree` instance and register. This call generates a private key and stores it on the device and sends our public key to Virgil. If we get a `RegistrationException` we have already registered this user. Keep in mind, you cannot log into the same user on a different device since we're not sharing the private key with the other device! This is possible, but out of scope for this tutorial. If you'd like to accomplish this, see Virgil's [documentation](https://developer.virgilsecurity.com/docs/e3kit/multi-device-support/). Note, the Virgil token will expire, so in a production application you need to provide a more robust `OnGetTokenCallback`. If the token expires, simply restart the app and log in.
+Virgil's client is called `EThree`. We initialize an `EThree` instance and register. This call generates a private key and stores it on the device and sends our public key to Virgil. If we get a `RegistrationException` we have already registered this user. Keep in mind, you can't log into the same user on a different device since we're not sharing the private key with the other device! This is possible, but out of scope for this tutorial. If you'd like to accomplish this, see Virgil's [documentation](https://developer.virgilsecurity.com/docs/e3kit/multi-device-support/). Note, the Virgil token will expire, so in a production application you need to provide a more robust `OnGetTokenCallback`. If the token expires, simply restart the app and log in.
 
-Here is the Swift impelmentation, which does the same thing on iOS:
+Here is the Swift implementation, which does the same thing on iOS:
 
 ```swift
 // flutter/ios/Runner/AppDelegate.swift:6
@@ -739,7 +724,7 @@ Widget _messageBuilder(context, message, _) {
 }
 ```
 
-We simply initialize a custom `EncryptedMessage` that takes that message, decrypts and displays it. Here's the implementation of `EncryptedMessage`:
+We simply initialize a custom `EncryptedMessage` widget that takes that message, decrypts and displays it. Here's the implementation of `EncryptedMessage`:
 
 ```dart
 // flutter/lib/encrypted_message.dart:6
