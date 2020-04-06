@@ -876,5 +876,5 @@ Typing a view messages on both sides will give a view like this:
 ![](images/final.png)
 
 
-And we're done! We have full end-to-end encryption using Stream and Virgil.
+And we're done! We have full end-to-end encryption using Stream and Virgil in Flutter.
 
